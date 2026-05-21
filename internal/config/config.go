@@ -10,6 +10,7 @@ type Config struct {
 	Database DatabaseConfig
 	JWT      JWTConfig
 	OpenCode OpenCodeConfig
+	GitHub   GitHubConfig
 }
 
 type ServerConfig struct {
@@ -32,6 +33,12 @@ type OpenCodeConfig struct {
 	BinaryPath string
 }
 
+type GitHubConfig struct {
+	ClientID     string
+	ClientSecret string
+	RedirectURI  string
+}
+
 func Load() *Config {
 	return &Config{
 		Server: ServerConfig{
@@ -49,6 +56,11 @@ func Load() *Config {
 		},
 		OpenCode: OpenCodeConfig{
 			BinaryPath: getEnv("OPENCODE_BINARY", "opencode"),
+		},
+		GitHub: GitHubConfig{
+			ClientID:     getEnv("GITHUB_CLIENT_ID", ""),
+			ClientSecret: getEnv("GITHUB_CLIENT_SECRET", ""),
+			RedirectURI:  getEnv("GITHUB_REDIRECT_URI", "http://localhost:8080/api/auth/github/callback"),
 		},
 	}
 }

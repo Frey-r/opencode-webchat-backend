@@ -22,22 +22,26 @@ type Client struct {
 	conn      *websocket.Conn
 	sessionID int
 	userID    int
+	workDir   string
 	send      chan []byte
 	mu        sync.Mutex
 }
 
-func newClient(hub *Hub, conn *websocket.Conn, sessionID, userID int) *Client {
+func newClient(hub *Hub, conn *websocket.Conn, sessionID, userID int, workDir string) *Client {
 	return &Client{
 		hub:       hub,
 		conn:      conn,
 		sessionID: sessionID,
 		userID:    userID,
+		workDir:   workDir,
 		send:      make(chan []byte, 256),
 	}
 }
 
 func (c *Client) readPump(ctx context.Context) {
+	log.Printf("[WS] readPump started for user=%d session=%d", c.userID, c.sessionID)
 	defer func() {
+		log.Printf("[WS] readPump ended for user=%d session=%d", c.userID, c.sessionID)
 		c.hub.unregister <- c
 		c.conn.Close()
 	}()
@@ -69,8 +73,10 @@ func (c *Client) readPump(ctx context.Context) {
 }
 
 func (c *Client) writePump(ctx context.Context) {
+	log.Printf("[WS] writePump started for user=%d session=%d", c.userID, c.sessionID)
 	ticker := time.NewTicker(pingInterval)
 	defer func() {
+		log.Printf("[WS] writePump ended for user=%d session=%d", c.userID, c.sessionID)
 		ticker.Stop()
 		c.conn.Close()
 	}()

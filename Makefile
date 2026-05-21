@@ -1,11 +1,17 @@
-.PHONY: build run test migrate dev clean docker-build docker-up docker-down
+.PHONY: build run test migrate dev clean docker-build docker-up docker-down frontend
 
 BINARY=opencode-webchat
 MAIN=cmd/server/main.go
 GOOSE=/opt/data/go/bin/goose
 DB_URL?=postgres://postgres:postgres@localhost:5432/opencode_webchat?sslmode=disable
+FRONTEND_DIR?=../opencode-webchat-frontend
 
-build:
+frontend:
+	cd $(FRONTEND_DIR) && npm install && npm run build
+	rm -rf web/dist/!(.gitkeep)
+	cp -r $(FRONTEND_DIR)/dist/* web/dist/
+
+build: frontend
 	go build -o $(BINARY) $(MAIN)
 
 run: build
@@ -17,7 +23,6 @@ dev:
 test:
 	go test ./...
 
-# Run migrations using goose
 migrate-up:
 	$(GOOSE) -dir migrations postgres "$(DB_URL)" up
 
@@ -27,7 +32,6 @@ migrate-down:
 migrate-status:
 	$(GOOSE) -dir migrations postgres "$(DB_URL)" status
 
-# Docker commands
 docker-build:
 	docker build -t opencode-webchat .
 
@@ -42,3 +46,4 @@ docker-logs:
 
 clean:
 	rm -f $(BINARY)
+	rm -rf web/dist/!(.gitkeep)
